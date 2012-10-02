@@ -1,8 +1,8 @@
 VERSION = 3
 PATCHLEVEL = 0
-SUBLEVEL = 43
-EXTRAVERSION =-FunkyKernel-LunarEdition
-NAME = Funkyv1.2
+SUBLEVEL = 44
+EXTRAVERSION =
+NAME = Sneaky Weasel
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
