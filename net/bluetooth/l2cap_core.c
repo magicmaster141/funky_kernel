@@ -3652,6 +3652,7 @@ done:
 				chan = l2cap_chan_admit(pi->amp_id, sk);
 				if (!chan)
 					return -ECONNREFUSED;
+
 				if (chan->state == BT_CONNECTED)
 					l2cap_create_cfm(chan, 0);
 			}
@@ -4491,6 +4492,7 @@ static inline int l2cap_config_rsp(struct l2cap_conn *conn, struct l2cap_cmd_hdr
 							ECONNRESET);
 				goto done;
 			}
+
 			if (chan->state == BT_CONNECTED)
 				l2cap_create_cfm(chan, 0);
 		}
@@ -5025,6 +5027,7 @@ static inline int l2cap_move_channel_rsp(struct l2cap_conn *conn,
 						L2CAP_MOVE_CHAN_UNCONFIRMED);
 				break;
 			}
+
 			if (chan->state == BT_CONNECTED) {
 				/* Logical link is already ready to go */
 				pi->ampcon = chan->conn;
@@ -5334,10 +5337,6 @@ void l2cap_amp_physical_complete(int result, u8 local_id, u8 remote_id,
 		pi->local_fs = default_fs;
 		chan = l2cap_chan_admit(local_id, sk);
 		if (chan) {
-			hci_chan_hold(chan);
-			pi->ampchan = chan;
-			chan->l2cap_sk = sk;
-
 			if (chan->state == BT_CONNECTED) {
 				/* Logical link is ready to go */
 				pi->ampcon = chan->conn;
@@ -5543,6 +5542,7 @@ static void l2cap_logical_link_worker(struct work_struct *work)
 	struct l2cap_logical_link_work *log_link_work =
 		container_of(work, struct l2cap_logical_link_work, work);
 	struct sock *sk = log_link_work->chan->l2cap_sk;
+
 	if (sk) {
 		l2cap_logical_link_complete(log_link_work->chan,
 							log_link_work->status);
@@ -5555,6 +5555,7 @@ static void l2cap_logical_link_worker(struct work_struct *work)
 static int l2cap_create_cfm(struct hci_chan *chan, u8 status)
 {
 	struct l2cap_logical_link_work *amp_work;
+
 	if (!chan->l2cap_sk) {
 		BT_ERR("Expected l2cap_sk to point to connecting socket");
 		return -EFAULT;
@@ -7252,12 +7253,6 @@ static inline int l2cap_att_channel(struct l2cap_conn *conn, __le16 cid,
 	struct sk_buff *skb_rsp;
 	struct l2cap_hdr *lh;
 	int dir;
-<<<<<<< HEAD
-	u8 mtu_rsp[] = {L2CAP_ATT_MTU_RSP, 23, 0};
-	u8 err_rsp[] = {L2CAP_ATT_ERROR, 0x00, 0x00, 0x00,
-						L2CAP_ATT_NOT_SUPPORTED};
-
-=======
 	u8 err_rsp[] = {L2CAP_ATT_ERROR, 0x00, 0x00, 0x00,
 						L2CAP_ATT_NOT_SUPPORTED};
 
@@ -7278,6 +7273,7 @@ static inline int l2cap_att_channel(struct l2cap_conn *conn, __le16 cid,
 
 		goto free_skb;
 	}
+
 	dir = (skb->data[0] & L2CAP_ATT_RESPONSE_BIT) ? 0 : 1;
 
 	sk = l2cap_find_sock_by_fixed_cid_and_dir(cid, conn->src,
@@ -7297,22 +7293,6 @@ static inline int l2cap_att_channel(struct l2cap_conn *conn, __le16 cid,
 
 	if (l2cap_pi(sk)->imtu < skb->len)
 		goto drop;
-
-	if (skb->data[0] == L2CAP_ATT_MTU_REQ) {
-		skb_rsp = bt_skb_alloc(sizeof(mtu_rsp) + L2CAP_HDR_SIZE,
-								GFP_ATOMIC);
-		if (!skb_rsp)
-			goto drop;
-
-		lh = (struct l2cap_hdr *) skb_put(skb_rsp, L2CAP_HDR_SIZE);
-		lh->len = cpu_to_le16(sizeof(mtu_rsp));
-		lh->cid = cpu_to_le16(L2CAP_CID_LE_DATA);
-		memcpy(skb_put(skb_rsp, sizeof(mtu_rsp)), mtu_rsp,
-							sizeof(mtu_rsp));
-		hci_send_acl(conn->hcon, NULL, skb_rsp, 0);
-
-		goto free_skb;
-	}
 
 	if (!sock_queue_rcv_skb(sk, skb))
 		goto done;

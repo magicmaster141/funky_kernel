@@ -1006,13 +1006,6 @@ static int set_dev_class(struct sock *sk, u16 index, unsigned char *data,
 	hdev->major_class |= cp->major & MGMT_MAJOR_CLASS_MASK;
 	hdev->minor_class = cp->minor;
 
-<<<<<<< HEAD
-	if (test_bit(HCI_UP, &hdev->flags))
-		err = update_class(hdev);
-	else
-		err = 0;
-
-	if (err == 0)
 	if (test_bit(HCI_UP, &hdev->flags)) {
 		err = update_class(hdev);
 		if (err == 0)
@@ -1811,8 +1804,10 @@ static int pair_device(struct sock *sk, u16 index, unsigned char *data, u16 len)
 	hci_dev_lock_bh(hdev);
 
 	io_cap = cp->io_cap;
+
 	sec_level = BT_SECURITY_MEDIUM;
 	auth_type = HCI_AT_DEDICATED_BONDING;
+
 	entry = hci_find_adv_entry(hdev, &cp->bdaddr);
 	if (entry && entry->flags & 0x04) {
 		conn = hci_le_connect(hdev, 0, &cp->bdaddr, sec_level,
@@ -2017,7 +2012,9 @@ static int set_rssi_reporter(struct sock *sk, u16 index,
 	if (!hdev)
 		return cmd_status(sk, index, MGMT_OP_SET_RSSI_REPORTER,
 							ENODEV);
+
 	hci_dev_lock_bh(hdev);
+
 	conn = hci_conn_hash_lookup_ba(hdev, LE_LINK, &cp->bdaddr);
 
 	if (!conn) {
@@ -2054,7 +2051,9 @@ static int unset_rssi_reporter(struct sock *sk, u16 index,
 	if (!hdev)
 		return cmd_status(sk, index, MGMT_OP_UNSET_RSSI_REPORTER,
 					ENODEV);
+
 	hci_dev_lock_bh(hdev);
+
 	conn = hci_conn_hash_lookup_ba(hdev, LE_LINK, &cp->bdaddr);
 
 	if (!conn) {
@@ -2334,6 +2333,7 @@ static int start_discovery(struct sock *sk, u16 index)
 				jiffies + msecs_to_jiffies(20000));
 	} else
 		hdev->disco_state = SCAN_BR;
+
 failed:
 	hci_dev_unlock_bh(hdev);
 	hci_dev_put(hdev);
