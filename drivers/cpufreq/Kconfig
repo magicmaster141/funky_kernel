@@ -161,19 +161,21 @@ config CPU_FREQ_DEFAULT_GOV_BADASS
 
 	  If in doubt, say N.
 
-config CPU_FREQ_DEFAULT_GOV_ADAPTIVE
-  	bool "adaptive"
-  	select CPU_FREQ_GOV_ADAPTIVE
-  	help
-    	  Use the CPUFreq governor 'adaptive' as default.
-
-config CPU_FREQ_DEFAULT_GOV_PEGASUSQ
-  	bool "pegasusq"
-  	select CPU_FREQ_GOV_PEGASUSQ
-  	help
-    	  Use the CPUFreq governor 'pegasusq' as default.
-
 endchoice
+
+config CPU_FREQ_GOV_BADASS
+	tristate "'badass' cpufreq governor"
+	depends on CPU_FREQ
+	help
+	  'badass' - This driver adds a dynamic cpufreq policy governor.
+	  The governor does a periodic polling and
+	  changes frequency based on the CPU utilization.
+	  The support for this governor depends on CPU capability to
+	  do fast frequency switching (i.e, very low latency frequency
+	  transitions).
+
+	  If in doubt, say N.
+
 
 config CPU_FREQ_GOV_DANCEDANCE
 	tristate "'dancedance' cpufreq governor"
