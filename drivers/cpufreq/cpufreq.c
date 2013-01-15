@@ -588,8 +588,10 @@ static ssize_t store_vdd_levels(struct cpufreq_policy *policy, const char *buf, 
 	int i = 0, j;
 	int pair[2] = { 0, 0 };
 	int sign = 0;
-	if (count &lt; 1)
+
+	if (count < 1)
 		return 0;
+
 	if (buf[0] == '-') {
 		sign = -1;
 		i++;
@@ -598,16 +600,20 @@ static ssize_t store_vdd_levels(struct cpufreq_policy *policy, const char *buf, 
 		sign = 1;
 		i++;
 	}
-	for (j = 0; i &lt; count; i++) {
+
+	for (j = 0; i < count; i++) {
+	
 		char c = buf[i];
-		if ((c &gt;= '0') &amp;&amp; (c &lt;= '9')) {
+		
+		if ((c >= '0') && (c <= '9')) {
 			pair[j] *= 10;
 			pair[j] += (c - '0');
 		}
 		else if ((c == ' ') || (c == '\t')) {
 			if (pair[j] != 0) {
 				j++;
-				if ((sign != 0) || (j &gt; 1))
+
+				if ((sign != 0) || (j > 1))
 					break;
 			}
 		}
@@ -616,11 +622,11 @@ static ssize_t store_vdd_levels(struct cpufreq_policy *policy, const char *buf, 
 	}
 
 	if (sign != 0) {
-		if (pair[0] &gt; 0)
+		if (pair[0] > 0)
 			acpuclk_set_vdd(0, sign * pair[0]);
 	}
 	else {
-		if ((pair[0] &gt; 0) &amp;&amp; (pair[1] &gt; 0))
+		if ((pair[0] > 0) && (pair[1] > 0))
 			acpuclk_set_vdd((unsigned)pair[0], pair[1]);
 		else
 			return -EINVAL;
@@ -659,6 +665,9 @@ static struct attribute *default_attrs[] = {
 	&scaling_driver.attr,
 	&scaling_available_governors.attr,
 	&scaling_setspeed.attr,
+#ifdef CONFIG_VDD_USERSPACE
+&vdd_levels.attr,
+#endif
 	NULL
 };
 
@@ -948,7 +957,6 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 	unsigned long flags;
 	unsigned int j;
 #ifdef CONFIG_HOTPLUG_CPU
-	struct cpufreq_policy *cp;
 	int sibling;
 #endif
 
@@ -997,14 +1005,10 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 	/* Set governor before ->init, so that driver could check it */
 #ifdef CONFIG_HOTPLUG_CPU
 	for_each_online_cpu(sibling) {
-		cp = per_cpu(cpufreq_cpu_data, sibling);
+		struct cpufreq_policy *cp = per_cpu(cpufreq_cpu_data, sibling);
 		if (cp && cp->governor &&
 		    (cpumask_test_cpu(cpu, cp->related_cpus))) {
 			policy->governor = cp->governor;
-			policy->min = cp->min;
-			policy->max = cp->max;
-			policy->user_policy.min = cp->user_policy.min;
-			policy->user_policy.max = cp->user_policy.max;
 			found = 1;
 			break;
 		}
@@ -1022,14 +1026,6 @@ static int cpufreq_add_dev(struct sys_device *sys_dev)
 	}
 	policy->user_policy.min = policy->min;
 	policy->user_policy.max = policy->max;
-
-	if (found) {
-		/* Calling the driver can overwrite policy frequencies again */
-		policy->min = cp->min;
-		policy->max = cp->max;
-		policy->user_policy.min = cp->user_policy.min;
-		policy->user_policy.max = cp->user_policy.max;
-	}
 
 	blocking_notifier_call_chain(&cpufreq_policy_notifier_list,
 				     CPUFREQ_START, policy);
